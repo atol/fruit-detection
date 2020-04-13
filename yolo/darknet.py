@@ -24,6 +24,48 @@ class DetectionLayer(nn.Module):
         self.anchors = anchors
 
 
+class Darknet(nn.Module):
+    """ YOLOv3 object detection model """
+    def __init__(self, cfgfile):
+        super(Darknet, self).__init__()
+        self.blocks = parse_cfg(cfgfile)
+        self.net_info, self.module_list = create_modules(blocks)
+    
+    def forward(self, x):
+        # Skip over 'net' block
+        modules = self.blocks[:1]
+        # Dictionary storing the output feature maps of every layer
+        # The keys are the indices of the layers and the values are the feature maps
+        outputs = {}
+
+        write = 0
+        for idx, module in enumerate(modules):
+            module_type = module["type"]
+
+            if module_type == "convolutional" or module_type == "upsample":
+                x = module(x)
+
+            elif module_type == "route":
+                layers = [int(x) for x in module["layers"]]
+
+                if layers[0] > 0:
+                    layers[0] = layers[0] - idx
+
+                # If layers has only one value, output feature map of the layer indexed by the value
+                if len(layers) == 1:
+                    x = outputs[layers[0]+idx]
+
+                # If layers has two values, return concatenated feature maps of layers indexed by its values
+                else:
+                    if layers[1] > 0:
+                        layers[1] = layers[1] - idx
+
+                    x = torch.cat((outputs[layers[0]+idx], outputs[layers[1]+idx]), 1)
+            
+            elif module_type == "shortcut":
+                froms = int(module["from"])
+                x = outputs[idx-1] + outputs[idx+froms]
+
 def parse_cfg(cfgfile):
     """
     Parses the official cfg file and stores every block as a dict.
@@ -81,13 +123,7 @@ def create_modules(blocks):
             filters = int(block["filters"])
             kernel_size = int(block["size"])
             stride = int(block["stride"])
-            pad = int(block["pad"])
-
-            # Check for padding
-            if pad:
-                padding = (kernel_size - 1) // 2
-            else:
-                padding = 0
+            padding = (kernel_size - 1) // 2
             
             # Check for batch normalization
             try:
@@ -107,7 +143,7 @@ def create_modules(blocks):
                 module.add_module("batch_norm_{0}".format(index), bn)
             
             # Add activation
-            # Check for either linear ReLU or leaky ReLU
+            # Check for leaky ReLU
             if activation == "leaky":
                 activn = nn.LeakyReLU(0.1, inplace=True)
                 module.add_module("leaky_{0}".format(index), activn)
@@ -120,12 +156,12 @@ def create_modules(blocks):
 
         # If it's a route layer
         elif block["type"] == "route":
-            block["layers"] = block["layers"].split(",")
+            layers = block["layers"].split(",")
             # Start of route
-            start = int(block["layers"][0])
+            start = int(layers[0])
             # End of route
             try:
-                end = int(block["layers"][1])
+                end = int(layers[1])
             except:
                 end = 0
 
@@ -153,11 +189,9 @@ def create_modules(blocks):
         
         # If it's the YOLO (detection) layer
         elif block["type"] == "yolo":
-            mask = block["mask"].split(",")
-            mask = [int(m) for m in mask]
+            mask = [int(x) for x in block["mask"].split(",")]
 
-            anchors = block["anchors"].split(",")
-            anchors = [int(a) for a in anchors]
+            anchors = [int(x) for x in block["anchors"].split(",")]
             anchors = [(anchors[i], anchors[i+1]) for i in range(0, len(anchors), 2)]
 
             # Select only the anchors indexed by the mask values
