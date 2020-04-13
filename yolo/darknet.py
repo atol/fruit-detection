@@ -12,12 +12,23 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 
+# Define dummy layer for layer operations, e.g. addition or concatenation
+class EmptyLayer(nn.Module):
+    def __init__(self):
+        super(EmptyLayer, self).__init__()
+
+# Define detection layer for holding anchors used to detect bounding boxes
+class DetectionLayer(nn.Module):
+    def __init__(self, anchors):
+        super(DetectionLayer, self).__init__()
+        self.anchors = anchors
+
+
 def parse_cfg(cfgfile):
     """
     Parses the official cfg file and stores every block as a dict.
     Returns a list of blocks.
     """
-
     # Read and pre-process the cfg file
     with open(cfgfile,"r") as f:
         lines = f.read().split("\n") # Store lines in a list
@@ -58,13 +69,11 @@ def create_modules(blocks):
     # Iterate over the list of blocks and create a PyTorch module for each block
     for index, block in enumerate(blocks[1:]):
         module = nn.Sequential() # Sequentially execute a number of nn.Module object
-
         """
         1. Check the type of block
         2. Create a new module for the block
         3. Append to module_list
         """
-
         # If it"s a convolutional layer
         if block["type"] == "convolutional":
             # Get info about the layer
@@ -103,7 +112,7 @@ def create_modules(blocks):
                 activn = nn.LeakyReLU(0.1, inplace=True)
                 module.add_module("leaky_{0}".format(index), activn)
 
-        # If it"s an upsampling layer
+        # If it's an upsampling layer
         elif block["type"] == "upsample":
             stride = int(block["stride"])
             upsample = nn.Upsample(scale_factor=stride, mode="bilinear")
@@ -164,16 +173,6 @@ def create_modules(blocks):
     return (net_info, module_list)
 
 
-# Define dummy layer for layer operations, e.g. addition or concatenation
-class EmptyLayer(nn.Module):
-    def __init__(self):
-        super(EmptyLayer, self).__init__()
-
-# Define detection layer for holding anchors used to detect bounding boxes
-class DetectionLayer(nn.Module):
-    def __init__(self, anchors):
-        super(DetectionLayer, self).__init__()
-        self.anchors = anchors
-
-blocks = parse_cfg("cfg/yolov3.cfg")
-print(create_modules(blocks))
+if __name__ == "__main__":
+    blocks = parse_cfg("cfg/yolov3.cfg")
+    print(create_modules(blocks))
