@@ -1,8 +1,3 @@
-# Darknet - Base architecture of YOLO
-# Based on the following tutorial:
-# https://blog.paperspace.com/how-to-implement-a-yolo-v3-object-detector-from-scratch-in-pytorch-part-2/
-
-
 from __future__ import division
 
 import numpy as np
@@ -12,17 +7,16 @@ import torch.nn.functional as F
 from torch.autograd import Variable
 
 
-# Define dummy layer for layer operations, e.g. addition or concatenation
 class EmptyLayer(nn.Module):
+    """ Dummy layer for layer operations """
     def __init__(self):
         super(EmptyLayer, self).__init__()
 
-# Define detection layer for holding anchors used to detect bounding boxes
 class DetectionLayer(nn.Module):
+    """ Layer for holding anchors used to detect bounding boxes """
     def __init__(self, anchors):
         super(DetectionLayer, self).__init__()
         self.anchors = anchors
-
 
 class Darknet(nn.Module):
     """ YOLOv3 object detection model """
@@ -39,28 +33,16 @@ class Darknet(nn.Module):
         outputs = {}
 
         write = 0
+        
         for idx, module in enumerate(modules):
             module_type = module["type"]
 
             if module_type == "convolutional" or module_type == "upsample":
-                x = module(x)
+                x = self.module_list[idx](x)
 
             elif module_type == "route":
-                layers = [int(x) for x in module["layers"]]
-
-                if layers[0] > 0:
-                    layers[0] = layers[0] - idx
-
-                # If layers has only one value, output feature map of the layer indexed by the value
-                if len(layers) == 1:
-                    x = outputs[layers[0]+idx]
-
-                # If layers has two values, return concatenated feature maps of layers indexed by its values
-                else:
-                    if layers[1] > 0:
-                        layers[1] = layers[1] - idx
-
-                    x = torch.cat((outputs[layers[0]+idx], outputs[layers[1]+idx]), 1)
+                layers = [int(x) for x in module["layers"].split(",")]
+                x = torch.cat((outputs[layers]), 1)
             
             elif module_type == "shortcut":
                 froms = int(module["from"])
@@ -116,7 +98,7 @@ def create_modules(blocks):
         2. Create a new module for the block
         3. Append to module_list
         """
-        # If it"s a convolutional layer
+        # If it's a convolutional layer
         if block["type"] == "convolutional":
             # Get info about the layer
             activation = block["activation"]       
@@ -156,31 +138,14 @@ def create_modules(blocks):
 
         # If it's a route layer
         elif block["type"] == "route":
-            layers = block["layers"].split(",")
-            # Start of route
-            start = int(layers[0])
-            # End of route
-            try:
-                end = int(layers[1])
-            except:
-                end = 0
-
-            # If indices are positive, get relative indices
-            if start > 0:
-                start = start - index
-            if end > 0:
-                end = end - index
-
+            layers = [int(x) for x in block["layers"].split(",")]
+            
             # Add route layer
             route = EmptyLayer()
             module.add_module("route_{0}".format(index), route)
 
-            # Updates filters variable to hold the number of filters outputted by a route layer
-            if end < 0:
-                # Concatenate feature maps
-                filters = output_filters[start+index] + output_filters[end+index]
-            else:
-                filters = output_filters[start+index]
+            # Update filters variable to hold the number of filters outputted by a route layer
+            filters = sum([output_filters[:][i] for i in layers])
             
         # If it's a shortcut layer (skip connection)
         elif block["type"] == "shortcut":
