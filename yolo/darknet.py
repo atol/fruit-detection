@@ -28,15 +28,13 @@ class Darknet(nn.Module):
         self.net_info, self.module_list = create_modules(self.blocks)
     
     def forward(self, x, cuda=False):
-        # Skip over 'net' block
-        modules = self.blocks[1:]
         # Dictionary storing the output feature maps of every layer
         # The keys are the indices of the layers and the values are the feature maps
         outputs = {}
         # Flag to indicate whether the first detection has been encountered
         flag = False
         
-        for idx, module in enumerate(modules):
+        for idx, module in enumerate(self.blocks[1:]): # Skip over 'net' block
             module_type = (module["type"])
 
             if module_type == "convolutional" or module_type == "upsample":
@@ -87,6 +85,69 @@ class Darknet(nn.Module):
             outputs[idx] = x
         
         return detections
+    
+    def load_weights(self, weightfile):
+        """ Load pretrained weights """
+        with open(weightfile,"rb") as f:
+            header = np.fromfile(f, dtype=np.int32, count=5) # First 5 values are header info
+            self.header = torch.from_numpy(header) # Save header info for when saving weights
+            self.seen = self.header[3] # Number of images seen
+            weights = np.fromfile(f, dtype=np.float32) # Read in weights
+        
+        ptr = 0 # Keep track of position in weights array
+        for idx, module in enumerate(self.blocks[1:]):
+            # If module type is convolutional, load weights
+            if module["type"] == "convolutional":
+                conv_layer = self.module_list[idx][0]
+
+                # Check if conv_layer has batch_normalize
+                try:
+                    batch_normalize = int(module["batch_normalize"])
+                except:
+                    batch_normalize = 0
+                
+                # If batch_normalize is True, load weights
+                if batch_normalize:
+                    bn_layer = self.module_list[idx][1]
+                    # Get number of biases
+                    num_bn_biases = bn_layer.bias.numel()
+                    # Biases
+                    bn_biases = torch.from_numpy(weights[ptr : ptr + num_bn_biases])
+                    ptr += num_bn_biases
+                    # Weights
+                    bn_weights = torch.from_numpy(weights[ptr : ptr + num_bn_biases])
+                    ptr += num_bn_biases
+                    # Running mean
+                    bn_running_mean = torch.from_numpy(weights[ptr : ptr + num_bn_biases])
+                    ptr += num_bn_biases
+                    # Running variance
+                    bn_running_var = torch.from_numpy(weights[ptr : ptr + num_bn_biases])
+                    ptr += num_bn_biases
+                    # Reshape to dimensions of bn_layer
+                    bn_biases = bn_biases.view_as(bn_layer.bias)
+                    bn_weights = bn_weights.view_as(bn_layer.weight)
+                    bn_running_mean = bn_running_mean.view_as(bn_layer.running_mean)
+                    bn_running_var = bn_running_var.view_as(bn_layer.running_var)
+                    # Copy data to bias layer
+                    bn_layer.bias.data.copy_(bn_biases)
+                    bn_layer.weight.data.copy_(bn_weights)
+                    bn_layer.running_mean.data.copy_(bn_running_mean)
+                    bn_layer.running_var.data.copy_(bn_running_var)
+
+                # Otherwise, load weights of convolutional layer
+                else:
+                    num_biases = conv_layer.bias.numel()
+                    conv_biases = torch.from_numpy(weights[ptr : ptr + num_biases])
+                    conv_biases = conv_biases.view_as(conv_layer.bias)
+                    conv_layer.bias.data.copy_(conv_biases)
+                    ptr += num_biases
+            
+            # Load convolutional layer weights
+            num_weights = conv_layer.weight.numel()
+            conv_weights = torch.from_numpy(weights[ptr: ptr + num_weights])
+            conv_weights = conv_weights.view_as(conv_layer.weight)
+            conv_layer.weight.data.copy_(conv_weights)
+            ptr += num_weights
 
 def parse_cfg(cfgfile):
     """
