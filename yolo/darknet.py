@@ -1,10 +1,12 @@
 from __future__ import division
 
-import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
 from torch.autograd import Variable
+import numpy as np
+import cv2
+from utils import *
 
 
 class EmptyLayer(nn.Module):
@@ -23,30 +25,68 @@ class Darknet(nn.Module):
     def __init__(self, cfgfile):
         super(Darknet, self).__init__()
         self.blocks = parse_cfg(cfgfile)
-        self.net_info, self.module_list = create_modules(blocks)
+        self.net_info, self.module_list = create_modules(self.blocks)
     
-    def forward(self, x):
+    def forward(self, x, cuda=False):
         # Skip over 'net' block
-        modules = self.blocks[:1]
+        modules = self.blocks[1:]
         # Dictionary storing the output feature maps of every layer
         # The keys are the indices of the layers and the values are the feature maps
         outputs = {}
-
-        write = 0
+        # Flag to indicate whether the first detection has been encountered
+        flag = False
         
         for idx, module in enumerate(modules):
-            module_type = module["type"]
+            module_type = (module["type"])
 
             if module_type == "convolutional" or module_type == "upsample":
                 x = self.module_list[idx](x)
 
             elif module_type == "route":
                 layers = [int(x) for x in module["layers"].split(",")]
-                x = torch.cat((outputs[layers]), 1)
+
+                # Get relative index
+                if layers[0] > 0:
+                    layers[0] = layers[0] - idx
+
+                # If layers has only one value, output feature map of the layer indexed by the value
+                if len(layers) == 1:
+                    x = outputs[layers[0]+idx]
+
+                # If layers has two values, return concatenated feature maps of layers indexed by its values
+                else:
+                    if layers[1] > 0:
+                        layers[1] = layers[1] - idx
+
+                    x = torch.cat((outputs[layers[0]+idx], outputs[layers[1]+idx]), 1)
             
             elif module_type == "shortcut":
                 froms = int(module["from"])
                 x = outputs[idx-1] + outputs[idx+froms]
+            
+            elif module_type == "yolo":
+                anchors = self.module_list[idx][0].anchors
+
+                # Get input image dimensions
+                img_dim = int(self.net_info["height"])
+
+                # Get the number of classes
+                num_classes = int(module["classes"])
+
+                # Transform feature map to 2D tensor
+                x = predict_transform(x.data, img_dim, anchors, num_classes, cuda)
+                
+                # If first detection, set detections to x
+                if not flag:
+                    detections = x
+                    flag = True
+                # Otherwise, concatenate x to detections
+                else:
+                    detections = torch.cat((detections, x), 1)
+
+            outputs[idx] = x
+        
+        return detections
 
 def parse_cfg(cfgfile):
     """
@@ -133,7 +173,7 @@ def create_modules(blocks):
         # If it's an upsampling layer
         elif block["type"] == "upsample":
             stride = int(block["stride"])
-            upsample = nn.Upsample(scale_factor=stride, mode="bilinear")
+            upsample = nn.Upsample(scale_factor=stride, mode="nearest")
             module.add_module("upsample_{0}".format(index), upsample)
 
         # If it's a route layer
@@ -170,8 +210,3 @@ def create_modules(blocks):
         output_filters.append(filters)
     
     return (net_info, module_list)
-
-
-if __name__ == "__main__":
-    blocks = parse_cfg("cfg/yolov3.cfg")
-    print(create_modules(blocks))
