@@ -147,12 +147,12 @@ class Darknet(nn.Module):
                     conv_layer.bias.data.copy_(conv_biases)
                     ptr += num_biases
             
-            # Load convolutional layer weights
-            num_weights = conv_layer.weight.numel()
-            conv_weights = torch.from_numpy(weights[ptr: ptr + num_weights])
-            conv_weights = conv_weights.view_as(conv_layer.weight)
-            conv_layer.weight.data.copy_(conv_weights)
-            ptr += num_weights
+                # Load convolutional layer weights
+                num_weights = conv_layer.weight.numel()
+                conv_weights = torch.from_numpy(weights[ptr: ptr + num_weights])
+                conv_weights = conv_weights.view_as(conv_layer.weight)
+                conv_layer.weight.data.copy_(conv_weights)
+                ptr += num_weights
 
 def parse_cfg(cfgfile):
     """
