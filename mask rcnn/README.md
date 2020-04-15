@@ -37,4 +37,6 @@ Replace /mrcnn/model.py and /mrcnn/utils.py with the given model.py and utils.py
 
 *[Object detection using Mask R-CNN on a custom dataset](https://towardsdatascience.com/object-detection-using-mask-r-cnn-on-a-custom-dataset-4f79ab692f6d)
 
+*[Splash of Color: Instance Segmentation with Mask R-CNN and TensorFlow](https://engineering.matterport.com/splash-of-color-instance-segmentation-with-mask-r-cnn-and-tensorflow-7c761e238b46)
+
 *[oid_to_pascal_voc_xml.py used to convert labels to xml](https://gist.github.com/nilsfed/1dbf1cf397db50c90705daa6a81a8dec)
