@@ -33,11 +33,8 @@ class Darknet(nn.Module):
         self.net_info, self.module_list = create_modules(self.blocks)
     
     def forward(self, x, cuda=False):
-        # Dictionary storing the output feature maps of every layer
-        # The keys are the indices of the layers and the values are the feature maps
-        outputs = {}
-        # Flag to indicate whether the first detection has been encountered
-        flag = False
+        outputs = {} # Dictionary storing the output feature maps of every layer
+        detections = torch.Tensor()
         
         for idx, module in enumerate(self.blocks[1:]): # Skip over 'net' block
             module_type = (module["type"])
@@ -78,14 +75,9 @@ class Darknet(nn.Module):
 
                 # Transform feature map to 2D tensor
                 x = predict_transform(x.data, img_dim, anchors, num_classes, cuda)
-                
-                # If first detection, set detections to x
-                if not flag:
-                    detections = x
-                    flag = True
-                # Otherwise, concatenate x to detections
-                else:
-                    detections = torch.cat((detections, x), 1)
+
+                # Concatenate x to detections
+                detections = torch.cat((detections, x), 1)
 
             outputs[idx] = x
         
@@ -197,7 +189,7 @@ def create_modules(blocks):
     output_filters = [] # List of number of output filters of each block
 
     # Iterate over the list of blocks and create a PyTorch module for each block
-    for index, block in enumerate(blocks[1:]):
+    for idx, block in enumerate(blocks[1:]):
         module = nn.Sequential() # Sequentially execute a number of nn.Module object
         """
         1. Check the type of block
@@ -223,24 +215,24 @@ def create_modules(blocks):
             
             # Add convolutional layer
             conv = nn.Conv2d(channels, filters, kernel_size, stride, padding, bias=bias)
-            module.add_module("conv_{0}".format(index), conv)
+            module.add_module("conv_{0}".format(idx), conv)
 
             # Add batch normalization layer
             if batch_normalize:
                 bn = nn.BatchNorm2d(filters)
-                module.add_module("batch_norm_{0}".format(index), bn)
+                module.add_module("batch_norm_{0}".format(idx), bn)
             
             # Add activation
             # Check for leaky ReLU
             if activation == "leaky":
                 activn = nn.LeakyReLU(0.1, inplace=True)
-                module.add_module("leaky_{0}".format(index), activn)
+                module.add_module("leaky_{0}".format(idx), activn)
 
         # If it's an upsampling layer
         elif block["type"] == "upsample":
             stride = int(block["stride"])
             upsample = nn.Upsample(scale_factor=stride, mode="nearest")
-            module.add_module("upsample_{0}".format(index), upsample)
+            module.add_module("upsample_{0}".format(idx), upsample)
 
         # If it's a route layer
         elif block["type"] == "route":
@@ -248,7 +240,7 @@ def create_modules(blocks):
             
             # Add route layer
             route = EmptyLayer()
-            module.add_module("route_{0}".format(index), route)
+            module.add_module("route_{0}".format(idx), route)
 
             # Update filters variable to hold the number of filters outputted by a route layer
             filters = sum([output_filters[:][i] for i in layers])
@@ -256,7 +248,7 @@ def create_modules(blocks):
         # If it's a shortcut layer (skip connection)
         elif block["type"] == "shortcut":
             shortcut = EmptyLayer()
-            module.add_module("shortcut_{0}".format(index), shortcut)
+            module.add_module("shortcut_{0}".format(idx), shortcut)
         
         # If it's the YOLO (detection) layer
         elif block["type"] == "yolo":
@@ -269,7 +261,7 @@ def create_modules(blocks):
             anchors = [anchors[m] for m in mask]
 
             detection = DetectionLayer(anchors)
-            module.add_module("Detection_{}".format(index), detection)
+            module.add_module("Detection_{}".format(idx), detection)
     
         module_list.append(module)
         channels = filters
