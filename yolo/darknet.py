@@ -1,3 +1,8 @@
+"""
+Darknet architecture
+Based on: https://blog.paperspace.com/tag/series-yolo/
+"""
+
 from __future__ import division
 
 import torch
