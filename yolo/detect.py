@@ -126,7 +126,7 @@ for i, batch in enumerate(img_batches):
 
     end = time.time()
 
-    if type(prediction) == int: # If output is int(0), there is no detection so skip rest of loop
+    if prediction.size(0) == 0: # If prediction is empty, there is no detection so skip rest of loop
         for img_num, img in enumerate(img_list[i*batch_size: min((i+1)*batch_size, len(img_list))]):
             img_id = i*batch_size + img_num
             print("{0:20s} predicted in {1:6.3f} seconds".format(img.split("/")[-1], (end - start)/batch_size))
@@ -136,7 +136,7 @@ for i, batch in enumerate(img_batches):
 
     prediction[:,0] += i*batch_size    # Transform the attribute from index in batch to index in img_list 
 
-    # Concatenate prediction tensors of all images that we have performed detetions on
+    # Concatenate prediction tensors of all images that we have performed detections on
     output = torch.cat((output, prediction))
 
     for img_num, image in enumerate(img_list[i*batch_size: min((i +  1)*batch_size, len(img_list))]):
@@ -150,11 +150,11 @@ for i, batch in enumerate(img_batches):
         torch.cuda.synchronize()
 
 # Exit program if no detections have been made
-try:
-    output.shape == 0
-except NameError:
+if output.size(0) == 0:
     print ("No detections were made")
     exit()
+else:
+    pass
 
 # Transform coordinates of the bounding boxes to boundaries of the original image on the padded image
 input_dim_list = torch.index_select(input_dim_list, 0, output[:,0].long())
