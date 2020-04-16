@@ -102,12 +102,13 @@ def non_max_suppression(prediction, conf_thres, num_classes, nms_thres=0.4):
     box_corner[:,:,1] = (prediction[:,:,1] - prediction[:,:,3] / 2)
     box_corner[:,:,2] = (prediction[:,:,0] + prediction[:,:,2] / 2)
     box_corner[:,:,3] = (prediction[:,:,1] + prediction[:,:,3] / 2)
+    prediction[:,:,:4] = box_corner[:,:,:4] # Apply transformation to prediction
 
     output = torch.Tensor()
 
     # Loop over images in a batch
-    for index in range(box_corner.size(0)):
-        img_pred = box_corner[index]
+    for index in range(prediction.size(0)):
+        img_pred = prediction[index]
 
         # Get index of class with the highest value and its score
         class_conf, class_score = torch.max(img_pred[:,5:], 1) # Offset by 5
@@ -160,7 +161,7 @@ def non_max_suppression(prediction, conf_thres, num_classes, nms_thres=0.4):
                 non_zero_idx = torch.nonzero(img_pred_class[:,4]).squeeze()
                 img_pred_class = img_pred_class[non_zero_idx].view(-1,7)
             
-            batch_idx = img_pred_class.new(img_pred_class.size(0), 1).fill_(idx)      
+            batch_idx = img_pred_class.new(img_pred_class.size(0), 1).fill_(index)
             
             # Repeat the batch_id for as many detections of the class cl in the image
             seq = torch.cat((batch_idx, img_pred_class), 1)
