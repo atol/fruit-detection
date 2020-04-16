@@ -90,11 +90,6 @@ def predict_transform(prediction, input_dim, anchors, num_classes, cuda):
 
 def non_max_suppression(prediction, conf_thres, num_classes, nms_thres=0.4):
     """ Applies thresholding based on objectness score and non-maximum suppression """
-    # Object confidence thresholding
-    conf_mask = (prediction[:,:,4] > conf_thres).float().unsqueeze(2)
-    prediction = prediction*conf_mask
-
-    # Non-maximum suppression thresholding
     # Transform (center x, center y, height, width) attributes of the bounding boxes to 
     # (top-left corner x, top-left corner y, right-bottom corner x, right-bottom corner y)
     box_corner = prediction.new(prediction.shape)
@@ -109,23 +104,19 @@ def non_max_suppression(prediction, conf_thres, num_classes, nms_thres=0.4):
     # Loop over images in a batch
     for index in range(prediction.size(0)):
         img_pred = prediction[index]
+        
+        # Filter out object confidence scores below threshold
+        img_pred = img_pred[img_pred[:,4] > conf_thres]
+
+        # Skip to next image if no scores are left
+        if img_pred.shape[0] == 0:
+            continue
 
         # Get index of class with the highest value and its score
         class_conf, class_score = torch.max(img_pred[:,5:], 1) # Offset by 5
         class_conf = class_conf.float().unsqueeze(1)
         class_score = class_score.float().unsqueeze(1)
         img_pred = torch.cat((img_pred[:,:5], class_conf, class_score), 1)
-
-         # Get rid of zeros
-        non_zero_idx = (torch.nonzero(img_pred[:,4]))
-
-        try:
-            img_pred = img_pred[non_zero_idx.squeeze(),:].view(-1,7)
-        except:
-            continue
-        
-        if img_pred.shape[0] == 0:
-            continue 
 
         # Get unique classes detected in an image
         img_classes = img_pred[:,-1].unique()
