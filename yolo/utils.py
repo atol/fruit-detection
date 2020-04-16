@@ -12,6 +12,32 @@ import numpy as np
 import cv2
 
 
+def load_classes(namesfile):
+    with open(namesfile, "r") as f:
+        names = f.read().split("\n")[:-1]
+    return names
+
+def letterbox_image(img, input_dim):
+    """ Resizes image with unchanged aspect ratio using padding """
+    img_w, img_h = img.shape[1], img.shape[0]
+    w, h = input_dim
+    scale = min(w/img_w, h/img_h)
+    new_w = int(img_w * scale)
+    new_h = int(img_h * scale)
+    resized_image = cv2.resize(img, (new_w,new_h), interpolation=cv2.INTER_CUBIC)
+    
+    canvas = np.full((input_dim[1], input_dim[0], 3), 128)
+    canvas[(h-new_h)//2 : (h-new_h)//2 + new_h, (w-new_w)//2 : (w-new_w)//2 + new_w,  :] = resized_image
+    
+    return canvas
+
+def preprocess(img, input_dim):
+    """ Prepares image for input to the neural network. """
+    img = letterbox_image(img, (input_dim, input_dim))
+    img = img[:,:,::-1].transpose((2,0,1)).copy()
+    img = torch.from_numpy(img).float().div(255.0).unsqueeze(0)
+    return img
+
 def predict_transform(prediction, input_dim, anchors, num_classes, cuda):
     """ Takes a detection feature map and turns it into a 2-D tensor """
     batch_size = prediction.size(0)
@@ -62,10 +88,10 @@ def predict_transform(prediction, input_dim, anchors, num_classes, cuda):
 
     return prediction
 
-def non_max_suppression(prediction, conf_threshold, num_classes, nms_threshold=0.4):
+def non_max_suppression(prediction, conf_thres, num_classes, nms_thres=0.4):
     """ Applies thresholding based on objectness score and non-maximum suppression """
     # Object confidence thresholding
-    conf_mask = (prediction[:,:,4] > confidence).float().unsqueeze(2)
+    conf_mask = (prediction[:,:,4] > conf_thres).float().unsqueeze(2)
     prediction = prediction*conf_mask
 
     # Non-maximum suppression thresholding
@@ -77,8 +103,8 @@ def non_max_suppression(prediction, conf_threshold, num_classes, nms_threshold=0
     box_corner[:,:,2] = (prediction[:,:,0] + prediction[:,:,2] / 2)
     box_corner[:,:,3] = (prediction[:,:,1] + prediction[:,:,3] / 2)
 
-    flag = False
-    
+    output = torch.Tensor()
+
     # Loop over images in a batch
     for index in range(box_corner.size(0)):
         img_pred = box_corner[index]
@@ -126,8 +152,8 @@ def non_max_suppression(prediction, conf_threshold, num_classes, nms_threshold=0
                 except IndexError:
                     break
 
-                # Zero out all the detections that have IoU > treshhold
-                iou_mask = (ious < nms_conf).float().unsqueeze(1)
+                # Zero out all the detections that have IoU > threshold
+                iou_mask = (ious < nms_thres).float().unsqueeze(1)
                 img_pred_class[i+1:] *= iou_mask       
 
                 # Remove the non-zero entries
@@ -137,19 +163,11 @@ def non_max_suppression(prediction, conf_threshold, num_classes, nms_threshold=0
             batch_idx = img_pred_class.new(img_pred_class.size(0), 1).fill_(idx)      
             
             # Repeat the batch_id for as many detections of the class cl in the image
-            seq = batch_idx, img_pred_class
+            seq = torch.cat((batch_idx, img_pred_class), 1)
 
-            if not flag:
-                output = torch.cat(seq, 1)
-                write = True
-            else:
-                out = torch.cat(seq,1)
-                output = torch.cat((output, out))
+            output = torch.cat((output, seq))
     
-    try:
-        return output
-    except:
-        return 0
+    return output
 
 def bbox_iou(box1, box2):
     """
@@ -160,17 +178,17 @@ def bbox_iou(box1, box2):
     b2_x1, b2_y1, b2_x2, b2_y2 = box2[:,0], box2[:,1], box2[:,2], box2[:,3]
     
     # Get the coordinates of the intersection rectangle
-    inter_rect_x1 =  torch.max(b1_x1, b2_x1)
-    inter_rect_y1 =  torch.max(b1_y1, b2_y1)
-    inter_rect_x2 =  torch.min(b1_x2, b2_x2)
-    inter_rect_y2 =  torch.min(b1_y2, b2_y2)
+    inter_rect_x1 = torch.max(b1_x1, b2_x1)
+    inter_rect_y1 = torch.max(b1_y1, b2_y1)
+    inter_rect_x2 = torch.min(b1_x2, b2_x2)
+    inter_rect_y2 = torch.min(b1_y2, b2_y2)
     
     # Intersection area
     inter_area = torch.clamp(inter_rect_x2 - inter_rect_x1 + 1, min=0) * torch.clamp(inter_rect_y2 - inter_rect_y1 + 1, min=0)
  
     # Union area
-    b1_area = (b1_x2 - b1_x1 + 1)*(b1_y2 - b1_y1 + 1)
-    b2_area = (b2_x2 - b2_x1 + 1)*(b2_y2 - b2_y1 + 1)
+    b1_area = (b1_x2 - b1_x1 + 1) * (b1_y2 - b1_y1 + 1)
+    b2_area = (b2_x2 - b2_x1 + 1) * (b2_y2 - b2_y1 + 1)
     
     iou = inter_area / (b1_area + b2_area - inter_area)
     

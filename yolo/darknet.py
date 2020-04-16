@@ -68,13 +68,13 @@ class Darknet(nn.Module):
                 anchors = self.module_list[idx][0].anchors
 
                 # Get input image dimensions
-                img_dim = int(self.net_info["height"])
+                input_dim = int(self.net_info["height"])
 
                 # Get the number of classes
                 num_classes = int(module["classes"])
 
                 # Transform feature map to 2D tensor
-                x = predict_transform(x.data, img_dim, anchors, num_classes, cuda)
+                x = predict_transform(x.data, input_dim, anchors, num_classes, cuda)
 
                 # Concatenate x to detections
                 detections = torch.cat((detections, x), 1)
