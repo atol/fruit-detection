@@ -121,7 +121,7 @@ for i, batch in enumerate(img_batches):
         batch = batch.cuda()
 
     with torch.no_grad():
-        prediction = model(batch, cuda)
+        prediction = model(Variable(batch), cuda)
         prediction = non_max_suppression(prediction, conf_thres, num_classes, nms_thres=nms_thres)
 
     end = time.time()
@@ -153,8 +153,6 @@ for i, batch in enumerate(img_batches):
 if output.size(0) == 0:
     print ("No detections were made")
     exit()
-else:
-    pass
 
 # Transform coordinates of the bounding boxes to boundaries of the original image on the padded image
 input_dim_list = torch.index_select(input_dim_list, 0, output[:,0].long())
