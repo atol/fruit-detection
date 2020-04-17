@@ -32,9 +32,12 @@ class Darknet(nn.Module):
         self.blocks = parse_cfg(cfgfile)
         self.net_info, self.module_list = create_modules(self.blocks)
     
-    def forward(self, x, cuda=False):
+    def forward(self, x, cuda):
         outputs = {} # Dictionary storing the output feature maps of every layer
-        detections = torch.Tensor()
+        
+        # Toggle CUDA
+        FloatTensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
+        detections = FloatTensor()
         
         for idx, module in enumerate(self.blocks[1:]): # Skip over 'net' block
             module_type = (module["type"])

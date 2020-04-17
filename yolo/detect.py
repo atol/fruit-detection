@@ -110,7 +110,7 @@ if batch_size != 1:
                        len(img_batches))]))  for i in range(num_batches)]
 
 # Detection loop
-output = torch.Tensor()
+output = FloatTensor()
 detect_loop = time.time()
 
 for i, batch in enumerate(img_batches):
@@ -122,7 +122,7 @@ for i, batch in enumerate(img_batches):
 
     with torch.no_grad():
         prediction = model(Variable(batch), cuda)
-        prediction = non_max_suppression(prediction, conf_thres, num_classes, nms_thres=nms_thres)
+        prediction = non_max_suppression(prediction, conf_thres, num_classes, cuda, nms_thres=nms_thres)
 
     end = time.time()
 

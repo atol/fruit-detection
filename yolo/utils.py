@@ -88,7 +88,7 @@ def predict_transform(prediction, input_dim, anchors, num_classes, cuda):
 
     return prediction
 
-def non_max_suppression(prediction, conf_thres, num_classes, nms_thres=0.4):
+def non_max_suppression(prediction, conf_thres, num_classes, cuda, nms_thres=0.4):
     """ Applies thresholding based on objectness score and non-maximum suppression """
     # Transform (center x, center y, height, width) attributes of the bounding boxes to 
     # (top-left corner x, top-left corner y, right-bottom corner x, right-bottom corner y)
@@ -99,7 +99,9 @@ def non_max_suppression(prediction, conf_thres, num_classes, nms_thres=0.4):
     box_corner[:,:,3] = (prediction[:,:,1] + prediction[:,:,3] / 2)
     prediction[:,:,:4] = box_corner[:,:,:4] # Apply transformation to prediction
 
-    output = torch.Tensor()
+    # Toggle CUDA
+    FloatTensor = torch.cuda.FloatTensor if cuda else torch.FloatTensor
+    output = FloatTensor()
 
     # Loop over images in a batch
     for index in range(prediction.size(0)):
