@@ -12,11 +12,11 @@ args = parser.parse_args()
 
 image_files = []
 
-path = "../imgs/" + args.dataset + "/"
+path = "../custom/images/" + args.dataset + "/"
 
 for filename in os.listdir(path):
     if filename.endswith(".jpg"):
-        image_files.append(path + filename)
+        image_files.append(path[1:] + filename)
 
 result = "../data/" + args.dataset + ".txt"
 
