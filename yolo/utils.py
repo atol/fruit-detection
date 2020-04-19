@@ -153,15 +153,11 @@ def non_max_suppression(prediction, conf_thres, num_classes, cuda, nms_thres=0.4
                 # Remove the non-zero entries
                 non_zero_idx = torch.nonzero(img_pred_class[:,4]).squeeze()
                 img_pred_class = img_pred_class[non_zero_idx].view(-1,7)
-
-                # Select specific classes (apple, banana, orange)
-                filter_class = (img_pred_class[:, -1] == 46) | (img_pred_class[:, -1] == 47) | (img_pred_class[:, -1] == 49)
-                filter_pred_class = img_pred_class[filter_class]
             
-            batch_idx = filter_pred_class.new(filter_pred_class.size(0), 1).fill_(index)
+            batch_idx = img_pred_class.new(img_pred_class.size(0), 1).fill_(index)
             
             # Repeat the batch_id for as many detections of the class cl in the image
-            seq = torch.cat((batch_idx, filter_pred_class), 1)
+            seq = torch.cat((batch_idx, img_pred_class), 1)
 
             output = torch.cat((output, seq))
     

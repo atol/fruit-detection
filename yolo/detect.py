@@ -34,8 +34,8 @@ def arg_parse():
     parser.add_argument("--batch", dest="batch", help="Batch size", default=1)
     parser.add_argument("--conf_thres", dest="conf_thres", help="Object confidence to filter predictions", default=0.5)
     parser.add_argument("--nms_thres", dest="nms_thres", help="NMS threshhold", default=0.4)
-    parser.add_argument("--cfg", dest="cfgfile", help="Config file", default="cfg/yolov3.cfg", type=str)
-    parser.add_argument("--weights", dest="weights", help="Weights file", default="weights/yolov3.weights", type=str)
+    parser.add_argument("--cfg", dest="cfgfile", help="Config file", default="cfg/yolov3-custom.cfg", type=str)
+    parser.add_argument("--weights", dest="weights", help="Weights file", default="weights/custom.weights", type=str)
     parser.add_argument("--img_size", dest="img_size", 
                         help="Input resolution of the network. Increase to increase accuracy. Decrease to increase speed",
                         default="416", type=str)
@@ -50,8 +50,8 @@ nms_thres = float(args.nms_thres)
 cuda = torch.cuda.is_available()
 start = 0
 
-num_classes = 80    # For COCO
-classes = load_classes("data/coco.names")
+num_classes = 3
+classes = load_classes("data/custom.names")
 
 # Use GPU if available
 device = torch.device("cuda" if cuda else "cpu")

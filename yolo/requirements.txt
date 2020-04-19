@@ -3,3 +3,6 @@ torch
 opencv-python
 pickle-mixin
 pandas
+tqdm
+notebook
+matplotlib
