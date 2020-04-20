@@ -33,6 +33,12 @@ Options (default values below):
 * Weights file: `--weights weights/custom.weights`
 * Image size: `--img_size 416`
 
+![Image of apples and pear](assets/apple-pear.jpg)
+
+![Image of oranges](assets/orange.jpg)
+
+![Image of apples and bananas](assets/apple-banana.jpg)
+
 ## References
 
 ```
