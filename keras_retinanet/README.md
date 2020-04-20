@@ -24,9 +24,9 @@ retinanet-train --epoch 2 --steps 453 --batch-size 4 csv train.csv class.csv
 ```
 
 The training parameters used above are:
-* Epoch: `--epoch 2`
-* Steps: `--steps 453`
-* Batch size: `--batch-size 4`
+* epoch: `--epoch 2`
+* steps per epoch: `--steps 453`
+* batch size: `--batch-size 4`
 
 ## Convert Training Model to Inference Model
 To convert training model to inference model, use the template:
