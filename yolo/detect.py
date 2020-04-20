@@ -28,12 +28,12 @@ def arg_parse():
     parser = argparse.ArgumentParser(description="YOLOv3 Detection Module")
    
     parser.add_argument("--images", dest="images", help="Directory containing images to perform detection upon",
-                        default="imgs", type=str)
+                        default="images", type=str)
     parser.add_argument("--output", dest="output", help="Directory to store detections to",
                         default="output", type=str)
     parser.add_argument("--batch", dest="batch", help="Batch size", default=1)
-    parser.add_argument("--conf_thres", dest="conf_thres", help="Object confidence to filter predictions", default=0.5)
-    parser.add_argument("--nms_thres", dest="nms_thres", help="NMS threshhold", default=0.4)
+    parser.add_argument("--conf_thres", dest="conf_thres", help="Object confidence to filter predictions", default=0.3)
+    parser.add_argument("--nms_thres", dest="nms_thres", help="NMS threshhold", default=0.6)
     parser.add_argument("--cfg", dest="cfgfile", help="Config file", default="cfg/yolov3-custom.cfg", type=str)
     parser.add_argument("--weights", dest="weights", help="Weights file", default="weights/custom.weights", type=str)
     parser.add_argument("--img_size", dest="img_size", 
@@ -184,11 +184,11 @@ def draw_boxes(x, results):
     cl = int(x[-1])
     color = random.choice(colors)
     label = "{0}".format(classes[cl])
-    cv2.rectangle(img, c1, c2, color, 2)
-    t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_PLAIN, 1 , 1)[0]
+    cv2.rectangle(img, c1, c2, color, 4)
+    t_size = cv2.getTextSize(label, cv2.FONT_HERSHEY_DUPLEX, 1, 1)[0]
     c2 = c1[0] + t_size[0] + 3, c1[1] + t_size[1] + 4
     cv2.rectangle(img, c1, c2, color, -1) # Create a filled rectangle for class name
-    cv2.putText(img, label, (c1[0], c1[1] + t_size[1] + 4), cv2.FONT_HERSHEY_PLAIN, 1, [225,255,255], 1) # Write class name
+    cv2.putText(img, label, (c1[0], c1[1] + t_size[1] + 2), cv2.FONT_HERSHEY_DUPLEX, 1, [225,255,255], 2) # Write class name
     return img
 
 list(map(lambda x: draw_boxes(x, loaded_imgs), output))
