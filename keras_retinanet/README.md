@@ -11,7 +11,7 @@ Follow installation instructions for Keras implementation of RetinaNet object de
 
 ## Obtaining CSV data
 Skip this step if you have CSV files in the format required by this implementation.
-Files in scripts folder are used to create CSV files from our OID dataset (containing categories Apple, Banana, Orange) and remove labels without an associated image. Must move these files to csv_folder in our dataset and run:
+Files in scripts folder are used to create CSV files (class.csv, train.csv, validation.csv, test.csv) from our OID dataset and remove labels without an associated image. Must move these files to csv_folder in our dataset and run:
 ```
 python rm-invalid.labels.py ../Dataset
 python get-csv.py ../Dataset
