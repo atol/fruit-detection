@@ -23,7 +23,7 @@ Assuming scripts were used to obtain CSV files, in the csv_folder, run:
 retinanet-train --epoch 2 --steps 453 --batch-size 4 csv train.csv class.csv
 ```
 
-The training parameters used were:
+The training parameters used above are:
 * Epoch: `--epoch 2`
 * Steps: `--steps 453`
 * Batch size: `--batch-size 4`
