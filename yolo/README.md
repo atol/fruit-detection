@@ -22,11 +22,13 @@ pip3 install -r requirements.txt
 python3 detect.py
 ```
 
-* Input images directory: `--images imgs`
-* Output images directory: `--output results`
-* Batch size: `--batch 8`
-* Object confidence threshold: `--conf_thres 0.4`
-* Non-maximum suppression threshold: `--nms_thres 0.5`
+Options (default values below):
+
+* Input images directory: `--images images`
+* Output images directory: `--output output`
+* Batch size: `--batch 1`
+* Object confidence threshold: `--conf_thres 0.3`
+* Non-maximum suppression threshold: `--nms_thres 0.6`
 * Network configuration file: `--cfg cfg/yolov3-custom.cfg`
 * Weights file: `--weights weights/custom.weights`
 * Image size: `--img_size 416`
