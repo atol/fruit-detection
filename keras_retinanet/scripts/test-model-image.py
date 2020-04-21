@@ -8,6 +8,7 @@ import keras
 import sys
 sys.path.insert(0, '../')
 
+from tkinter.filedialog import askopenfile
 
 # import keras_retinanet
 from keras_retinanet import models
@@ -26,6 +27,11 @@ import time
 # set tf backend to allow memory to grow, instead of claiming everything
 import tensorflow as tf
 
+# adjust these parameters
+modelName = 'inference-model-02.h5'
+scoreThreshold = 0.35
+
+
 # use this to change which GPU to use
 gpu = 0
 
@@ -40,7 +46,7 @@ setup_gpu(gpu)
 
 # adjust this to point to your downloaded/trained model
 # models can be downloaded here: https://github.com/fizyr/keras-retinanet/releases
-model_path = os.path.join('..', 'my_models', 'inference-model-02.h5')
+model_path = os.path.join('..', 'my_models', modelName)
 
 # load retinanet model
 model = models.load_model(model_path, backbone_name='resnet50')
@@ -61,7 +67,8 @@ labels_to_names = {0: 'Apple', 1: 'Banana', 2: 'Orange'}
 
 
 # load image
-image = read_image_bgr('2cff67b07b9d2397.jpg')
+f = askopenfile(mode ='r', filetypes =[('image', '*.jpg')]) 
+image = read_image_bgr(f.name)
 
 # copy to draw on
 draw = image.copy()
@@ -82,7 +89,7 @@ boxes /= scale
 # visualize detections
 for box, score, label in zip(boxes[0], scores[0], labels[0]):
     # scores are sorted so we can break
-    if score < 0.36:
+    if score < scoreThreshold:
         break
         
     color = label_color(label)

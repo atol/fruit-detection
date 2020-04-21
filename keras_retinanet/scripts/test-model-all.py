@@ -8,8 +8,6 @@ import keras
 import sys
 sys.path.insert(0, '../')
 
-from tkinter.filedialog import askopenfilename
-
 # import keras_retinanet
 from keras_retinanet import models
 from keras_retinanet.utils.image import read_image_bgr, preprocess_image, resize_image
