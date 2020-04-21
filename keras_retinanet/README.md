@@ -31,7 +31,7 @@ The training parameters used above are:
 ## Convert Training Model to Inference Model
 To convert training model to inference model, use the template:
 ```
-retinanet-convert-model /path/to/training_model.h5 /path/to/inference_model.h5
+retinanet-convert-model /path/to/training-model.h5 /path/to/inference-model.h5
 ```
 
 ## Testing
