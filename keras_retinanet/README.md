@@ -31,13 +31,13 @@ The training parameters used above are:
 ## Convert Training Model to Inference Model
 To convert training model to inference model, use the template:
 ```
-retinanet-convert-model /path/to/training/model.h5 /path/to/save/inference/model.h5
+retinanet-convert-model /path/to/training_model.h5 /path/to/inference_model.h5
 ```
 
 ## Testing
 To test the model, run the script `test-model-all.py` on the dataset containing the fruits.
 ```
-python path/to/test-model-all.py path/to/dataset
+python path/to/test-model-all.py path/to/OID/dataset
 ```
 This will print the average AP scores for apples, bananas, and oranges, and the overall AP score over all these fruits.
 
