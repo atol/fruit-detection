@@ -1,5 +1,5 @@
 # RetinaNet
-Keras RetinaNet implementation of RetinaNet.
+Keras implementation of RetinaNet.
 
 ## Requirements
 * numpy
