@@ -32,4 +32,7 @@ images:
     `python test_frcnn.py -p /path/to/test_data/`
 - Data augmentation can be applied by specifying `--hf` for horizontal flips, `--vf` for vertical flips and `--rot` for 90 degree rotations
 
+# Reference
 
+https://github.com/kbardool/keras-frcnn
+https://www.analyticsvidhya.com/blog/2018/11/implementation-faster-r-cnn-python-object-detection/?fbclid=IwAR2eJVFG9I7YLi3OnIFc6xj0h-MGfj-n8PG7yc80TYVmT_QQjQz4jbScLgQ
