@@ -33,27 +33,3 @@ images:
 - Data augmentation can be applied by specifying `--hf` for horizontal flips, `--vf` for vertical flips and `--rot` for 90 degree rotations
 
 
-
-NOTES:
-- config.py contains all settings for the train or test run. The default settings match those in the original Faster-RCNN
-paper. The anchor box sizes are [128, 256, 512] and the ratios are [1:1, 1:2, 2:1].
-- The theano backend by default uses a 7x7 pooling region, instead of 14x14 as in the frcnn paper. This cuts down compiling time slightly.
-- The tensorflow backend performs a resize on the pooling region, instead of max pooling. This is much more efficient and has little impact on results.
-
-
-Example output:
-
-![ex1](http://i.imgur.com/7Lmb2RC.png)
-![ex2](http://i.imgur.com/h58kCIV.png)
-![ex3](http://i.imgur.com/EbvGBaG.png)
-![ex4](http://i.imgur.com/i5UAgLb.png)
-
-ISSUES:
-
-- If you get this error:
-`ValueError: There is a negative shape in the graph!`    
-    than update keras to the newest version
-
-- This repo was developed using `python2`. `python3` should work thanks to the contribution of a number of users.
-
-- If you run out of memory, try reducing the number of ROIs that are processed simultaneously. Try passing a lower `-n` to `train_frcnn.py`. Alternatively, try reducing the image size from the default value of 600 (this setting is found in `config.py`.
