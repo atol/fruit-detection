@@ -11,16 +11,17 @@ Follow installation instructions for Keras implementation of RetinaNet object de
 
 ## Obtaining CSV data
 Skip this step if you have CSV files in the format required by this implementation.
-Files in scripts folder are used to create CSV files (class.csv, train.csv, validation.csv, test.csv) from our OID dataset and remove labels without an associated image. Move these files to csv_folder in our dataset and run:
+Run files in scripts folder to remove labels without an associated image and create CSV files (class.csv, train.csv, validation.csv, test.csv) from the OID dataset:
 ```
-python rm-invalid.labels.py ../Dataset
-python get-csv.py ../Dataset
+python rm-invalid.labels.py path/to/OID/Dataset
+python get-csv.py path/to/OID/Dataset
 ```
+The csv files will be generated in the current working directory. Move these files where you want them.
 
 ## Training
-Assuming scripts were used to obtain CSV files, in the csv_folder, run:
+Assuming the `get-csv.py` was used to obtain the CSV files, run:
 ```
-retinanet-train --epoch 2 --steps 453 --batch-size 4 csv train.csv class.csv
+retinanet-train --epoch 2 --steps 453 --batch-size 4 csv path/to/train.csv path/to/class.csv
 ```
 
 The training parameters used above are:
