@@ -32,4 +32,7 @@ images:
     `python test_frcnn.py -p /path/to/test_data/`
 - Data augmentation can be applied by specifying `--hf` for horizontal flips, `--vf` for vertical flips and `--rot` for 90 degree rotations
 
+# Reference
+
+https://github.com/kbardool/keras-frcnn
 
