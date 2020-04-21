@@ -35,10 +35,9 @@ retinanet-convert-model /path/to/training/model.h5 /path/to/save/inference/model
 ```
 
 ## Testing
-To test the model, use the template:
+To test the model, run the script `test-model-all.py` on the dataset containing the fruits.
 ```
-from keras_retinanet.models import load_model
-model = load_model('/path/to/model.h5', backbone_name='resnet50')
+python path/to/test-model-all.py path/to/dataset
 ```
 
 ## References
