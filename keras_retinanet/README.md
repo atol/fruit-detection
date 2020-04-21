@@ -39,6 +39,7 @@ To test the model, run the script `test-model-all.py` on the dataset containing 
 ```
 python path/to/test-model-all.py path/to/dataset
 ```
+This will print the average AP scores for apples, bananas, and oranges, and the overall AP score over all these fruits.
 
 ## References
 ```
