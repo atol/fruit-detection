@@ -1,4 +1,4 @@
-# RetinaNet
+# Keras RetinaNet
 Keras implementation of RetinaNet.
 
 ## Requirements
