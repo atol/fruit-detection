@@ -37,7 +37,7 @@ setup_gpu(gpu)
 
 # adjust this to point to your downloaded/trained model
 # models can be downloaded here: https://github.com/fizyr/keras-retinanet/releases
-model_path = os.path.join('..', 'my_models', 'inference-model-01.h5')
+model_path = os.path.join('..', 'my_models', 'inference-model.h5')
 
 # load retinanet model
 model = models.load_model(model_path, backbone_name='resnet50')

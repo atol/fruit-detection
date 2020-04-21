@@ -28,7 +28,7 @@ import time
 import tensorflow as tf
 
 # adjust these parameters
-modelName = 'inference-model-02.h5'
+modelName = 'inference-model.h5'
 scoreThreshold = 0.35
 
 
